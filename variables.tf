@@ -1,5 +1,5 @@
 variable "namespace" {
-  description = "Namespace of all resources as identifier"
+  description = "Namespace of all resources as identifier."
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "namespace" {
 }
 
 variable "stage" {
-  description = "Stage, such as dev, stg, and prd"
+  description = "Stage, such as dev, stg, and prd."
   type        = string
   default     = "dev"
 
@@ -20,8 +20,29 @@ variable "stage" {
 }
 
 variable "region" {
-  description = "AWS region to deploy"
+  description = "AWS region to deploy."
   type        = string
+
+  validation {
+    condition     = length(regexall("[a-z]+-[a-z]+-[1-3]", var.region)) > 0
+    error_message = "AWS Region format is not valid."
+  }
+}
+
+variable "az_ids" {
+  description = <<EOT
+  A list of letter identifier for availability zone.
+  Availability zone consists of region code followed by a letter identifier. (ex. ap-northeast-2a)
+  EOT
+  type        = list(string)
+  default     = ["a", "b", "c"]
+
+  validation {
+    condition     = alltrue([
+    for az_id in var.az_ids : (length(az_id) == 1 && contains(["a", "b", "c", "d"], az_id))
+    ])
+    error_message = "Each letter identifier for availability zone should be one of [a, b, c, d]."
+  }
 }
 
 locals {
@@ -48,6 +69,8 @@ locals {
   region_abbreviation = local.region_abbreviation_map[var.region]
   prefix_hyphen       = format("%s-%s-%s", var.namespace, var.stage, local.region_abbreviation)
   prefix_underline    = format("%s_%s_%s", var.namespace, var.stage, local.region_abbreviation)
+
+  azs = [for az_id in var.az_ids : "${var.region}${az_id}"]
 }
 
 variable "cidr" {
