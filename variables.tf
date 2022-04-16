@@ -76,11 +76,21 @@ locals {
 variable "cidr" {
   description = "CIDR block of the VPC"
   type        = string
-  default     = "0.0.0.0/0"
+  default     = "10.255.0.0/16"
 }
 
 variable "tags" {
   description = "Map of tags"
   type        = map(string)
   default     = {}
+}
+
+variable "public_subnets" {
+  description = "A list of public subnets, which has an internet gateway."
+  type        = map(string)
+  default     = {
+    a = "10.255.0.0/22"
+    b = "10.255.4.0/22"
+    c = "10.255.8.0/22"
+  }
 }
