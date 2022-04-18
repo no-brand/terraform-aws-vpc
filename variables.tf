@@ -104,3 +104,23 @@ variable "private_subnets" {
     c = "10.255.28.0/22"
   }
 }
+
+variable "intra_subnets" {
+  description = "A list of intra subnets, which is isolated from public."
+  type        = map(string)
+  default     = {
+    a = "10.255.40.0/22"
+    b = "10.255.44.0/22"
+    c = "10.255.48.0/22"
+  }
+}
+
+variable "database_subnets" {
+  description = "A list of database subnets, which is isolated from public."
+  type        = map(string)
+  default     = {
+    a = "10.255.60.0/22"
+    b = "10.255.64.0/22"
+    c = "10.255.68.0/22"
+  }
+}

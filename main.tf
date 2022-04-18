@@ -64,7 +64,7 @@ resource "aws_subnet" "private" {
   vpc_id                  = aws_vpc.this.id
   availability_zone       = each.key
   cidr_block              = each.value
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
 
   tags = merge({
     "Name" = format("%s-private-subnet", local.prefix_hyphen)
@@ -117,4 +117,68 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[each.key].id
   route_table_id = aws_route_table.private[each.key].id
+}
+
+
+# {namespace}-{stage}-{region}-intra-subnet
+resource "aws_subnet" "intra" {
+  for_each = {for az_id, subnet in var.intra_subnets: "${var.region}${az_id}" => subnet}
+
+  vpc_id                  = aws_vpc.this.id
+  availability_zone       = each.key
+  cidr_block              = each.value
+  map_public_ip_on_launch = false
+
+  tags = merge({
+    "Name" = format("%s-intra-subnet", local.prefix_hyphen)
+  }, var.tags)
+}
+
+# {namespace}-{stage}-{region}-intra-subnet-rtb-{az_id}
+resource "aws_route_table" "intra" {
+  for_each = {for az_id, subnet in var.intra_subnets: "${var.region}${az_id}" => az_id}
+
+  vpc_id = aws_vpc.this.id
+  tags   = merge({
+    "Name" = format("%s-intra-subnet-rtb-%s", local.prefix_hyphen, each.value)
+  }, var.tags)
+}
+
+resource "aws_route_table_association" "intra" {
+  for_each = {for az_id, subnet in var.intra_subnets: "${var.region}${az_id}" => az_id}
+
+  subnet_id      = aws_subnet.intra[each.key].id
+  route_table_id = aws_route_table.intra[each.key].id
+}
+
+
+# {namespace}-{stage}-{region}-database-subnet
+resource "aws_subnet" "database" {
+  for_each = {for az_id, subnet in var.database_subnets: "${var.region}${az_id}" => subnet}
+
+  vpc_id                  = aws_vpc.this.id
+  availability_zone       = each.key
+  cidr_block              = each.value
+  map_public_ip_on_launch = false
+
+  tags = merge({
+    "Name" = format("%s-database-subnet", local.prefix_hyphen)
+  }, var.tags)
+}
+
+# {namespace}-{stage}-{region}-database-subnet-rtb-{az_id}
+resource "aws_route_table" "database" {
+  for_each = {for az_id, subnet in var.database_subnets: "${var.region}${az_id}" => az_id}
+
+  vpc_id = aws_vpc.this.id
+  tags   = merge({
+    "Name" = format("%s-database-subnet-rtb-%s", local.prefix_hyphen, each.value)
+  }, var.tags)
+}
+
+resource "aws_route_table_association" "database" {
+  for_each = {for az_id, subnet in var.database_subnets: "${var.region}${az_id}" => az_id}
+
+  subnet_id      = aws_subnet.database[each.key].id
+  route_table_id = aws_route_table.database[each.key].id
 }
