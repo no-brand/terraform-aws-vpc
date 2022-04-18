@@ -94,3 +94,13 @@ variable "public_subnets" {
     c = "10.255.8.0/22"
   }
 }
+
+variable "private_subnets" {
+  description = "A list of private subnets, which has a nat gateway."
+  type        = map(string)
+  default     = {
+    a = "10.255.20.0/22"
+    b = "10.255.24.0/22"
+    c = "10.255.28.0/22"
+  }
+}
