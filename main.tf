@@ -10,14 +10,6 @@ resource "aws_vpc" "this" {
   }, var.tags)
 }
 
-# {namespace}-{stage}-{region}-igw
-resource "aws_internet_gateway" "this" {
-  vpc_id = aws_vpc.this.id
-
-  tags = merge({
-    "Name" = format("%s-igw", local.prefix_hyphen)
-  }, var.tags)
-}
 
 # {namespace}-{stage}-{region}-public-subnet
 resource "aws_subnet" "public" {
@@ -30,6 +22,15 @@ resource "aws_subnet" "public" {
 
   tags = merge({
     "Name" = format("%s-public-subnet", local.prefix_hyphen)
+  }, var.tags)
+}
+
+# {namespace}-{stage}-{region}-igw
+resource "aws_internet_gateway" "this" {
+  vpc_id = aws_vpc.this.id
+
+  tags = merge({
+    "Name" = format("%s-igw", local.prefix_hyphen)
   }, var.tags)
 }
 
@@ -54,6 +55,7 @@ resource "aws_route_table_association" "public" {
   subnet_id      = aws_subnet.public[each.key].id
   route_table_id = aws_route_table.public.id
 }
+
 
 # {namespace}-{stage}-{region}-private-subnet
 resource "aws_subnet" "private" {
