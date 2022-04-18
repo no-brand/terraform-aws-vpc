@@ -1,5 +1,5 @@
 variable "namespace" {
-  description = "Namespace of all resources as identifier"
+  description = "Namespace of all resources as identifier."
   type        = string
 
   validation {
@@ -9,7 +9,7 @@ variable "namespace" {
 }
 
 variable "stage" {
-  description = "Stage, such as dev, stg, and prd"
+  description = "Stage, such as dev, stg, and prd."
   type        = string
   default     = "dev"
 
@@ -20,8 +20,29 @@ variable "stage" {
 }
 
 variable "region" {
-  description = "AWS region to deploy"
+  description = "AWS region to deploy."
   type        = string
+
+  validation {
+    condition     = length(regexall("[a-z]+-[a-z]+-[1-3]", var.region)) > 0
+    error_message = "AWS Region format is not valid."
+  }
+}
+
+variable "az_ids" {
+  description = <<EOT
+  A list of letter identifier for availability zone.
+  Availability zone consists of region code followed by a letter identifier. (ex. ap-northeast-2a)
+  EOT
+  type        = list(string)
+  default     = ["a", "b", "c"]
+
+  validation {
+    condition     = alltrue([
+    for az_id in var.az_ids : (length(az_id) == 1 && contains(["a", "b", "c", "d"], az_id))
+    ])
+    error_message = "Each letter identifier for availability zone should be one of [a, b, c, d]."
+  }
 }
 
 locals {
@@ -48,16 +69,58 @@ locals {
   region_abbreviation = local.region_abbreviation_map[var.region]
   prefix_hyphen       = format("%s-%s-%s", var.namespace, var.stage, local.region_abbreviation)
   prefix_underline    = format("%s_%s_%s", var.namespace, var.stage, local.region_abbreviation)
+
+  azs = [for az_id in var.az_ids : "${var.region}${az_id}"]
 }
 
 variable "cidr" {
   description = "CIDR block of the VPC"
   type        = string
-  default     = "0.0.0.0/0"
+  default     = "10.255.0.0/16"
 }
 
 variable "tags" {
   description = "Map of tags"
   type        = map(string)
   default     = {}
+}
+
+variable "public_subnets" {
+  description = "A list of public subnets, which has an internet gateway."
+  type        = map(string)
+  default     = {
+    a = "10.255.0.0/22"
+    b = "10.255.4.0/22"
+    c = "10.255.8.0/22"
+  }
+}
+
+variable "private_subnets" {
+  description = "A list of private subnets, which has a nat gateway."
+  type        = map(string)
+  default     = {
+    a = "10.255.20.0/22"
+    b = "10.255.24.0/22"
+    c = "10.255.28.0/22"
+  }
+}
+
+variable "intra_subnets" {
+  description = "A list of intra subnets, which is isolated from public."
+  type        = map(string)
+  default     = {
+    a = "10.255.40.0/22"
+    b = "10.255.44.0/22"
+    c = "10.255.48.0/22"
+  }
+}
+
+variable "database_subnets" {
+  description = "A list of database subnets, which is isolated from public."
+  type        = map(string)
+  default     = {
+    a = "10.255.60.0/22"
+    b = "10.255.64.0/22"
+    c = "10.255.68.0/22"
+  }
 }
