@@ -71,6 +71,19 @@ locals {
   prefix_underline    = format("%s_%s_%s", var.namespace, var.stage, local.region_abbreviation)
 
   azs = [for az_id in var.az_ids : "${var.region}${az_id}"]
+
+  subnets = {
+    public   = aws_subnet.public
+    private  = aws_subnet.private
+    intra    = aws_subnet.intra
+    database = aws_subnet.database
+  }
+  route_tables = {
+    public   = aws_route_table.public
+    private  = aws_route_table.private
+    intra    = aws_route_table.intra
+    database = aws_route_table.database
+  }
 }
 
 variable "cidr" {
@@ -122,5 +135,20 @@ variable "database_subnets" {
     a = "10.255.60.0/22"
     b = "10.255.64.0/22"
     c = "10.255.68.0/22"
+  }
+}
+
+variable "vpc_endpoints" {
+  description = <<EOF
+A list of vpc endpoints, which helps to communicate AWS resource with internal network.
+list consists of map objects, key is service name of vpc endpoint, and value should have below information.
+1. type: service type of vpc endpoint [Gateway, Interface]
+2. subnet: mandatory if type is Gateway, associated subnets
+EOF
+  default     = {
+    s3 = {
+      type   = "Gateway"
+      subnet = ["private", "intra"]
+    }
   }
 }
