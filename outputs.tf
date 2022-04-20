@@ -31,3 +31,11 @@ output "database_subnets" {
   description = "List of IDs of database subnets"
   value       = [for az, subnet in aws_subnet.database: subnet["id"]]
 }
+
+output "vpc_endpoints" {
+  description = "List of vpc endpoints"
+  value       = {for service, res in aws_vpc_endpoint.this: service => {
+    id             = res["id"]
+    prefix_list_id = res["prefix_list_id"]
+  }}
+}
