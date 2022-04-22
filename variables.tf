@@ -78,6 +78,7 @@ locals {
     intra    = aws_subnet.intra
     database = aws_subnet.database
   }
+
   route_tables = {
     public   = aws_route_table.public
     private  = aws_route_table.private
@@ -140,12 +141,12 @@ variable "database_subnets" {
 
 variable "vpc_endpoints" {
   description = <<EOF
-A list of vpc endpoints, which helps to communicate AWS resource with internal network.
+A list of vpc endpoints, which helps to communicate AWS resource with internal networks.
 list consists of map objects, key is service name of vpc endpoint, and value should have below information.
 1. type: service type of vpc endpoint [Gateway, Interface]
-2. subnet: mandatory if type is Gateway, associated subnets
+2. subnet: associated subnets.
 EOF
-  default     = {
+  default = {
     s3 = {
       type   = "Gateway"
       subnet = ["private", "intra"]

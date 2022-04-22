@@ -34,8 +34,9 @@ output "database_subnets" {
 
 output "vpc_endpoints" {
   description = "List of vpc endpoints"
-  value       = {for service, res in aws_vpc_endpoint.this: service => {
-    id             = res["id"]
-    prefix_list_id = res["prefix_list_id"]
+  value       = {for service, doc in aws_vpc_endpoint.this: service => {
+    type           = doc["vpc_endpoint_type"]
+    id             = doc["id"]
+    prefix_list_id = doc["prefix_list_id"]
   }}
 }
