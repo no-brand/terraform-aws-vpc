@@ -182,3 +182,40 @@ resource "aws_route_table_association" "database" {
   subnet_id      = aws_subnet.database[each.key].id
   route_table_id = aws_route_table.database[each.key].id
 }
+
+
+# {namespace}-{stage}-{region}-default-sg
+resource "aws_default_security_group" "this" {
+  vpc_id = aws_vpc.this.id
+  tags   = merge({
+    "Name" = format("%s-default-sg", local.prefix_hyphen)
+  }, var.tags)
+}
+
+data "aws_vpc_endpoint_service" "this" {
+  for_each = {for service, doc in var.vpc_endpoints: service => doc}
+  service  = each.key
+
+  filter {
+    name   = "service-type"
+    values = [lookup(each.value, "type", "Interface")]
+  }
+}
+
+# {namespace}-{stage}-{region}-vpc-endpoint-{service}-{type}
+resource "aws_vpc_endpoint" "this" {
+  for_each = {for service, doc in var.vpc_endpoints: service => doc}
+
+  vpc_id              = aws_vpc.this.id
+  service_name        = data.aws_vpc_endpoint_service.this[each.key].service_name
+  vpc_endpoint_type   = lookup(each.value, "type", "Interface")
+  route_table_ids     = lookup(each.value, "type", "Interface") == "Gateway" ? (flatten([for k in each.value["subnet"]: [for az, rtb in local.route_tables[k]: rtb["id"]]])) : []
+  subnet_ids          = lookup(each.value, "type", "Interface") == "Interface" ? (flatten([for k in each.value["subnet"]: [for az, subnet in local.subnets[k]: subnet["id"]]])) : []
+  security_group_ids  = lookup(each.value, "type", "Interface") == "Interface" ? [aws_default_security_group.this.id] : null
+  private_dns_enabled = lookup(each.value, "type", "Interface") == "Interface" ? true : null
+
+
+  tags   = merge({
+    "Name" = format("%s-vpc-endpoint-%s-%s", local.prefix_hyphen, each.key, lower(lookup(each.value, "type", "Interface")))
+  }, var.tags)
+}
