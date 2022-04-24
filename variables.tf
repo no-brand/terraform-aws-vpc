@@ -38,8 +38,8 @@ variable "az_ids" {
   default     = ["a", "b", "c"]
 
   validation {
-    condition     = alltrue([
-    for az_id in var.az_ids : (length(az_id) == 1 && contains(["a", "b", "c", "d"], az_id))
+    condition = alltrue([
+      for az_id in var.az_ids : (length(az_id) == 1 && contains(["a", "b", "c", "d"], az_id))
     ])
     error_message = "Each letter identifier for availability zone should be one of [a, b, c, d]."
   }
@@ -102,7 +102,8 @@ variable "tags" {
 variable "public_subnets" {
   description = "A list of public subnets, which has an internet gateway."
   type        = map(string)
-  default     = {
+
+  default = {
     a = "10.255.0.0/22"
     b = "10.255.4.0/22"
     c = "10.255.8.0/22"
@@ -112,7 +113,8 @@ variable "public_subnets" {
 variable "private_subnets" {
   description = "A list of private subnets, which has a nat gateway."
   type        = map(string)
-  default     = {
+
+  default = {
     a = "10.255.20.0/22"
     b = "10.255.24.0/22"
     c = "10.255.28.0/22"
@@ -122,7 +124,8 @@ variable "private_subnets" {
 variable "intra_subnets" {
   description = "A list of intra subnets, which is isolated from public."
   type        = map(string)
-  default     = {
+
+  default = {
     a = "10.255.40.0/22"
     b = "10.255.44.0/22"
     c = "10.255.48.0/22"
@@ -132,7 +135,8 @@ variable "intra_subnets" {
 variable "database_subnets" {
   description = "A list of database subnets, which is isolated from public."
   type        = map(string)
-  default     = {
+
+  default = {
     a = "10.255.60.0/22"
     b = "10.255.64.0/22"
     c = "10.255.68.0/22"
