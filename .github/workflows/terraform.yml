@@ -18,4 +18,4 @@ jobs:
       - name: setup terraform
         uses: hashicorp/setup-terraform@v1
       - name: fmt
-        run: terraform fmt -check
+        run: terraform fmt -check -diff
