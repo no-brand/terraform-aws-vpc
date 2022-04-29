@@ -84,11 +84,11 @@ resource "aws_eip" "nat" {
 
 # {namespace}-{stage}-{region}-nat-{az_id}
 resource "aws_nat_gateway" "this" {
-  for_each = { for az_id, subnet in var.private_subnets : "${var.region}${az_id}" => az_id }
+  for_each = { for az_id, subnet in var.public_subnets : "${var.region}${az_id}" => az_id }
 
   connectivity_type = "public"
   allocation_id     = aws_eip.nat[each.key].id
-  subnet_id         = aws_subnet.private[each.key].id
+  subnet_id         = aws_subnet.public[each.key].id
 
   tags = merge({
     "Name" = format("%s-nat-%s", local.prefix_hyphen, each.value)
