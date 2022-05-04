@@ -154,6 +154,18 @@ EOF
     s3 = {
       type   = "Gateway"
       subnet = ["private", "intra"]
+    },
+    ssm = {
+      type   = "Interface"
+      subnet = ["private"]
+    },
+    ssmmessages = {
+      type   = "Interface"
+      subnet = ["private"]
+    },
+    ec2messages = {
+      type   = "Interface"
+      subnet = ["private"]
     }
   }
 }
