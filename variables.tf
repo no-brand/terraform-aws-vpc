@@ -85,6 +85,10 @@ locals {
     intra    = aws_route_table.intra
     database = aws_route_table.database
   }
+
+  tags = merge({
+    TF_MODULE = "VPC"
+  }, var.tags)
 }
 
 variable "cidr" {
