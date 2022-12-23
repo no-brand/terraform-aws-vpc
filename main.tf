@@ -10,6 +10,20 @@ resource "aws_vpc" "this" {
   }, local.tags)
 }
 
+# {namespace}-{stage}-{region}-vpc-flow-log
+resource "aws_flow_log" "this" {
+  vpc_id          = aws_vpc.this.id
+  traffic_type    = "ALL"
+  iam_role_arn    = aws_iam_role.flow.arn
+  log_destination = aws_cloudwatch_log_group.flow.arn
+
+  tags = merge({
+    Name              = format("%s-vpc-flog-log", local.prefix_hyphen)
+    RESOURCE_CATEGORY = "AUDIT"
+  }, local.tags)
+}
+
+
 # {namespace}-{stage}-{region}-public-subnet
 resource "aws_subnet" "public" {
   for_each = { for az_id, subnet in var.public_subnets : "${var.region}${az_id}" => subnet }
