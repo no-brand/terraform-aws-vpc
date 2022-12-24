@@ -6,8 +6,21 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
 
   tags = merge({
-    "Name" = format("%s-vpc", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-vpc", local.prefix_hyphen)
+  }, local.tags)
+}
+
+# {namespace}-{stage}-{region}-vpc-flow-log
+resource "aws_flow_log" "this" {
+  vpc_id          = aws_vpc.this.id
+  traffic_type    = "ALL"
+  iam_role_arn    = aws_iam_role.flow.arn
+  log_destination = aws_cloudwatch_log_group.flow.arn
+
+  tags = merge({
+    Name              = format("%s-vpc-flog-log", local.prefix_hyphen)
+    RESOURCE_CATEGORY = "AUDIT"
+  }, local.tags)
 }
 
 
@@ -21,8 +34,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = merge({
-    "Name" = format("%s-public-subnet", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-public-subnet", local.prefix_hyphen)
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-igw
@@ -30,8 +43,9 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-igw", local.prefix_hyphen)
-  }, var.tags)
+    Name              = format("%s-igw", local.prefix_hyphen)
+    RESOURCE_CATEGORY = "INTERNET"
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-public-subnet-rtb
@@ -39,8 +53,8 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-public-subnet-rtb", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-public-subnet-rtb", local.prefix_hyphen)
+  }, local.tags)
 }
 
 resource "aws_route" "public" {
@@ -67,8 +81,8 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = merge({
-    "Name" = format("%s-private-subnet", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-private-subnet", local.prefix_hyphen)
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-nat-eip-{az_id}
@@ -78,8 +92,9 @@ resource "aws_eip" "nat" {
   vpc = true
 
   tags = merge({
-    "Name" = format("%s-nat-eip-%s", local.prefix_hyphen, each.value)
-  }, var.tags)
+    Name              = format("%s-nat-eip-%s", local.prefix_hyphen, each.value)
+    RESOURCE_CATEGORY = "INTERNET"
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-nat-{az_id}
@@ -91,8 +106,9 @@ resource "aws_nat_gateway" "this" {
   subnet_id         = aws_subnet.public[each.key].id
 
   tags = merge({
-    "Name" = format("%s-nat-%s", local.prefix_hyphen, each.value)
-  }, var.tags)
+    Name              = format("%s-nat-%s", local.prefix_hyphen, each.value)
+    RESOURCE_CATEGORY = "INTERNET"
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-private-subnet-rtb-{az_id}
@@ -102,8 +118,8 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-private-subnet-rtb-%s", local.prefix_hyphen, each.value)
-  }, var.tags)
+    Name = format("%s-private-subnet-rtb-%s", local.prefix_hyphen, each.value)
+  }, local.tags)
 }
 
 resource "aws_route" "private" {
@@ -132,8 +148,8 @@ resource "aws_subnet" "intra" {
   map_public_ip_on_launch = false
 
   tags = merge({
-    "Name" = format("%s-intra-subnet", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-intra-subnet", local.prefix_hyphen)
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-intra-subnet-rtb-{az_id}
@@ -143,8 +159,8 @@ resource "aws_route_table" "intra" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-intra-subnet-rtb-%s", local.prefix_hyphen, each.value)
-  }, var.tags)
+    Name = format("%s-intra-subnet-rtb-%s", local.prefix_hyphen, each.value)
+  }, local.tags)
 }
 
 resource "aws_route_table_association" "intra" {
@@ -153,7 +169,6 @@ resource "aws_route_table_association" "intra" {
   subnet_id      = aws_subnet.intra[each.key].id
   route_table_id = aws_route_table.intra[each.key].id
 }
-
 
 # {namespace}-{stage}-{region}-database-subnet
 resource "aws_subnet" "database" {
@@ -165,8 +180,8 @@ resource "aws_subnet" "database" {
   map_public_ip_on_launch = false
 
   tags = merge({
-    "Name" = format("%s-database-subnet", local.prefix_hyphen)
-  }, var.tags)
+    Name = format("%s-database-subnet", local.prefix_hyphen)
+  }, local.tags)
 }
 
 # {namespace}-{stage}-{region}-database-subnet-rtb-{az_id}
@@ -176,8 +191,8 @@ resource "aws_route_table" "database" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-database-subnet-rtb-%s", local.prefix_hyphen, each.value)
-  }, var.tags)
+    Name = format("%s-database-subnet-rtb-%s", local.prefix_hyphen, each.value)
+  }, local.tags)
 }
 
 resource "aws_route_table_association" "database" {
@@ -193,8 +208,9 @@ resource "aws_default_security_group" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = merge({
-    "Name" = format("%s-default-sg", local.prefix_hyphen)
-  }, var.tags)
+    Name              = format("%s-default-sg", local.prefix_hyphen)
+    RESOURCE_CATEGORY = "SG"
+  }, local.tags)
 }
 
 data "aws_vpc_endpoint_service" "this" {
@@ -220,6 +236,7 @@ resource "aws_vpc_endpoint" "this" {
   private_dns_enabled = lookup(each.value, "type", "Interface") == "Interface" ? true : null
 
   tags = merge({
-    "Name" = format("%s-vpc-endpoint-%s-%s", local.prefix_hyphen, each.key, lower(lookup(each.value, "type", "Interface")))
-  }, var.tags)
+    Name              = format("%s-vpc-endpoint-%s-%s", local.prefix_hyphen, each.key, lower(lookup(each.value, "type", "Interface")))
+    RESOURCE_CATEGORY = "VPCE"
+  }, local.tags)
 }
